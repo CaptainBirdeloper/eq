@@ -4,35 +4,22 @@ A system equalizer for Windows with an AMOLED web interface and system tray cont
 
 ## Setup
 
-### 1. Install Equalizer APO
-PulseEQ writes filter values to Equalizer APO, which handles the actual audio processing:
-1. Download and install [Equalizer APO](https://sourceforge.net/projects/equalizerapo/).
-2. In the Equalizer APO Configurator, select your playback device (headphones or speakers).
-3. Restart Windows when prompted.
-4. Open `C:\Program Files\EqualizerAPO\config\config.txt` in Notepad and add this line to the bottom:
+### Automatic One-Click Setup (Recommended)
+1. Install [Equalizer APO](https://sourceforge.net/projects/equalizerapo/) and select your audio device in its Configurator. Restart when prompted.
+2. Double-click `setup.bat` (or run `setup\install.bat`). It installs dependencies, verifies the Equalizer APO config link, and launches the app.
+3. Right-click the PulseEQ icon in your Windows system tray and select **Start with Windows** so it loads on boot.
+
+### Manual Setup
+1. Add this line to the bottom of `C:\Program Files\EqualizerAPO\config\config.txt`:
 ```text
 Include: py_equalizer.txt
 ```
-Save the file.
-
-### 2. Install Python Dependencies
-PulseEQ uses standard library modules plus `pystray` and `pillow` for the system tray icon:
+2. Install Python dependencies:
 ```powershell
 pip install pystray pillow
 ```
-
-### 3. Run PulseEQ
-Double-click `run.bat` or run:
-```powershell
-python main.py
-```
-To run silently in the background without a console window:
-```powershell
-pythonw main.py
-```
-
-### 4. Open the Interface
-Click the PulseEQ icon in your system tray, or open `http://127.0.0.1:8765` in your browser.
+3. Run `run.bat` or `pythonw main.py`.
+4. Open `http://127.0.0.1:8765` in your browser.
 
 ## Features
 
