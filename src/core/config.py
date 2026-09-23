@@ -25,7 +25,23 @@ DEFAULT_PRESETS: Dict[str, Dict[str, Any]] = {
     "Flat": {
         "preamp": 0.0,
         "gains": [0.0] * 10,
+        "frequencies": DEFAULT_FREQUENCIES,
+        "q_factors": [DEFAULT_Q] * 10,
         "description": "Flat reference."
+    },
+    "Bass Boost": {
+        "preamp": 0.0,
+        "gains": [2.4, 5.8, 4.0, 7.7, 0.0, 0.0, 5.4, 0.0, 0.0, 0.3],
+        "frequencies": [35.0, 66.0, 182.0, 402.0, 500.0, 1000.0, 1387.0, 4098.0, 8059.0, 16186.0],
+        "q_factors": [0.45] * 10,
+        "description": "Extended bass curve with vocal presence."
+    },
+    "YouTube Preview": {
+        "preamp": -1.0,
+        "gains": [-2.0, -0.5, 0.0, -1.0, 0.0, 0.0, 1.2, 0.8, 0.0, -3.0],
+        "frequencies": [32.0, 64.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0],
+        "q_factors": [1.0] * 10,
+        "description": "YouTube -14 LUFS True Peak headroom, vocal presence, and lossy roll-off preview."
     }
 }
 

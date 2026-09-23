@@ -137,6 +137,10 @@ class TrayApp:
             preset = presets[preset_name]
             self.settings.gains = list(preset["gains"])
             self.settings.preamp = float(preset["preamp"])
+            if "frequencies" in preset and isinstance(preset["frequencies"], list) and len(preset["frequencies"]) == len(self.settings.frequencies):
+                self.settings.frequencies = list(preset["frequencies"])
+            if "q_factors" in preset and isinstance(preset["q_factors"], list) and len(preset["q_factors"]) == len(self.settings.q_factors):
+                self.settings.q_factors = list(preset["q_factors"])
             self.settings.active_preset = preset_name
             self.apo_bridge.apply_config()
             self.settings.save()
