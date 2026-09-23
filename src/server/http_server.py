@@ -42,9 +42,6 @@ class EqualizerApiHandler(SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
         self.wfile.write(body)
 
@@ -54,14 +51,65 @@ class EqualizerApiHandler(SimpleHTTPRequestHandler):
         self.send_header("Expires", "0")
         super().end_headers()
 
+    def is_request_authorized(self) -> bool:
+        """
+        Validates that incoming requests originate strictly from the local PulseEQ UI.
+        Blocks cross-site request forgery (CSRF), DNS rebinding, and external web page attacks.
+        """
+        # 1. Block external sites via W3C Fetch Metadata
+        sec_fetch_site = self.headers.get("Sec-Fetch-Site")
+        if sec_fetch_site and sec_fetch_site.strip().lower() == "cross-site":
+            return False
+
+        srv_addr = getattr(self.server, "server_address", ("127.0.0.1", 8765))
+        server_host = str(srv_addr[0])
+        server_port = int(srv_addr[1])
+
+        allowed_hosts = {
+            f"{server_host}:{server_port}",
+            f"127.0.0.1:{server_port}",
+            f"localhost:{server_port}",
+            server_host,
+            "127.0.0.1",
+            "localhost",
+        }
+
+        # 2. Host validation (protects against DNS rebinding)
+        host = self.headers.get("Host", "").strip().lower().split("@")[-1]
+        if host and host not in allowed_hosts:
+            return False
+
+        allowed_origins = {
+            f"http://{server_host}:{server_port}",
+            f"http://127.0.0.1:{server_port}",
+            f"http://localhost:{server_port}",
+        }
+
+        # 3. Origin check (protects against cross-origin browser fetch calls)
+        origin = self.headers.get("Origin")
+        if origin:
+            origin_clean = origin.strip().rstrip("/").lower()
+            if origin_clean not in allowed_origins:
+                return False
+
+        # 4. Referer check if Origin header is omitted
+        referer = self.headers.get("Referer")
+        if referer:
+            referer_clean = referer.strip().lower()
+            if not any(referer_clean.startswith(prefix) for prefix in allowed_origins):
+                return False
+
+        return True
+
     def do_OPTIONS(self):
-        self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_response(403)
         self.end_headers()
 
     def do_GET(self):
+        if not self.is_request_authorized():
+            self.send_json({"error": "Forbidden: Request origin or host not permitted"}, 403)
+            return
+
         clean_path = self.path.split("?")[0]
 
         if clean_path == "/api/state":
@@ -84,6 +132,10 @@ class EqualizerApiHandler(SimpleHTTPRequestHandler):
             return None
 
     def do_POST(self):
+        if not self.is_request_authorized():
+            self.send_json({"error": "Forbidden: Request origin or host not permitted"}, 403)
+            return
+
         clean_path = self.path.split("?")[0]
         data = self.parse_json_body()
 
