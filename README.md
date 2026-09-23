@@ -170,15 +170,4 @@ EQ/
 │       ├── audio_math.js    # Biquad filter calculations
 │       ├── canvas_view.js   # Edge-to-edge canvas graph renderer
 │       └── keyboard.js      # Accessible keyboard navigation
-└── tests/
-    └── test_eq.py           # Test suite
-```
-
----
-
-## Running Tests
-
-Run the test suite from the project root:
-```powershell
-python -m unittest discover tests
 ```
