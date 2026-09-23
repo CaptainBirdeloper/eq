@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseEQ - Studio Zero-Latency Equalizer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Live Screen Reader Announcer -->
+  <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Studio Frame Container -->
+  <div class="studio-frame">
+    <!-- Top Hardware Rack Bar -->
+    <header class="rack-header" role="banner">
+      <div class="rack-branding">
+        <h1 class="product-title">PulseEQ</h1>
+
+        <!-- Master Power / Bypass Switch -->
+        <button id="bypass-toggle" class="power-switch active" type="button" aria-pressed="false" aria-label="Toggle Master EQ Bypass">
+          <div class="switch-led" aria-hidden="true"></div>
+          <span id="power-btn-label">POWER</span>
+        </button>
+      </div>
+
+      <!-- Presets Ribbon with Edge Fade Masks -->
+      <nav class="presets-dock" aria-label="Equalizer Presets">
+        <div class="dock-fade dock-fade-left" aria-hidden="true"></div>
+        <div id="presets-list" class="presets-track" role="group" aria-label="Presets collection">
+          <!-- Dynamically populated preset chips -->
+        </div>
+        <div class="dock-fade dock-fade-right" aria-hidden="true"></div>
+
+        <button id="save-preset-btn" class="rack-action-btn" type="button" aria-label="Save current curve as custom preset">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save</span>
+        </button>
+      </nav>
+
+      <!-- Integrated Global Q Factor Stepper & Scroll Lock -->
+      <div class="q-dock" aria-label="Global Q Factor Control">
+        <span class="q-dock-label">Q</span>
+        <div class="stepper-capsule">
+          <button id="q-dec-btn" class="capsule-btn" type="button" aria-label="Widen bandwidth Q">&minus;</button>
+          <span id="inspector-q" class="capsule-display">1.41</span>
+          <button id="q-inc-btn" class="capsule-btn" type="button" aria-label="Narrow bandwidth Q">&plus;</button>
+        </div>
+        <button id="q-lock-btn" class="q-lock-btn" type="button" aria-label="Toggle mouse wheel Q scroll lock" title="Lock mouse scroll on Q factor">
+          <svg class="lock-icon icon-unlocked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+          </svg>
+          <svg class="lock-icon icon-locked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Stage: Interactive Scope + Tactile Fader -->
+    <main class="console-stage" role="main">
+      <!-- Interactive Curve Scope Viewport -->
+      <div class="scope-viewport" id="graphViewport" tabindex="0" role="region" aria-label="Interactive Equalizer Spectrum Curve. Use arrow keys to adjust, numbers 1-0 to select bands, wheel for Q factor.">
+        <canvas id="fairlightCanvas"></canvas>
+
+        <!-- Floating HUD Tooltip -->
+        <div id="handle-tooltip" class="scope-hud hidden" role="tooltip" aria-hidden="true">
+          <div class="hud-header" id="hud-band-title">BAND 1</div>
+          <div class="hud-readings">
+            <div class="reading-col">
+              <span class="reading-label">FREQ</span>
+              <strong id="hud-freq">1.0 kHz</strong>
+            </div>
+            <div class="reading-col">
+              <span class="reading-label">GAIN</span>
+              <strong id="hud-gain">+3.0 dB</strong>
+            </div>
+            <div class="reading-col">
+              <span class="reading-label">Q</span>
+              <strong id="hud-q">1.41</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Hardware Gain Column -->
+      <aside class="master-fader-column" aria-label="Master Output Gain Section">
+        <div class="fader-header">
+          <span class="header-tag">OUT</span>
+          <span class="header-unit">dB</span>
+        </div>
+
+        <div class="fader-chassis">
+          <!-- Recessed Track with Tick Marks -->
+          <div class="fader-scale" aria-hidden="true">
+            <span class="tick tick-major">+20</span>
+            <span class="tick tick-minor">+15</span>
+            <span class="tick tick-major">+10</span>
+            <span class="tick tick-minor">+5</span>
+            <span class="tick tick-zero">0</span>
+            <span class="tick tick-minor">-5</span>
+            <span class="tick tick-major">-10</span>
+            <span class="tick tick-minor">-15</span>
+            <span class="tick tick-major">-20</span>
+          </div>
+
+          <div class="fader-slot">
+            <input 
+              type="range" 
+              id="preamp-fader" 
+              min="-20" 
+              max="20" 
+              step="0.5" 
+              value="0" 
+              orient="vertical"
+              aria-label="Master Gain Output Preamp"
+              aria-valuemin="-20"
+              aria-valuemax="20"
+              aria-valuenow="0"
+              aria-valuetext="0.0 dB"
+            >
+          </div>
+        </div>
+
+        <!-- Digital Readout Button -->
+        <button id="preamp-readout" class="fader-digital-meter" type="button" title="Click or double-click to snap to 0.0 dB" aria-label="Master Gain 0.0 dB. Click to reset.">
+          <span class="meter-sign"></span>
+          <span class="meter-digits">0.0</span>
+        </button>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Modal: Save Custom Preset -->
+  <div id="modal-save-preset" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-save-title">
+    <div class="studio-dialog card">
+      <div class="dialog-header">
+        <h2 id="modal-save-title">Save Custom Preset</h2>
+        <button class="dialog-close-btn" data-close="modal-save-preset" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <div class="input-field-group">
+          <label for="custom-preset-name">Preset Name</label>
+          <input type="text" id="custom-preset-name" placeholder="e.g. My Preset" maxlength="28" autocomplete="off">
+        </div>
+        <div class="input-field-group">
+          <label for="custom-preset-desc">Description (optional)</label>
+          <input type="text" id="custom-preset-desc" placeholder="e.g. Bass boost & vocal presence" maxlength="60" autocomplete="off">
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="utility-btn" data-close="modal-save-preset" type="button">Cancel</button>
+        <button id="modal-save-confirm-btn" class="dialog-primary-btn" type="button">Save Preset</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
